@@ -1,0 +1,18 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Model weights (large binaries — track separately, e.g. via a release or Drive link)
+models/bltsm/*
+models/bert_emotion_model_final/*
+!models/bltsm/.gitkeep
+!models/bert_emotion_model_final/.gitkeep
+
+# Logs & generated data
+logs/*.csv
+.DS_Store
