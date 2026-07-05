@@ -1,0 +1,26 @@
+======================================================================
+UNIFIED DATASET BUILD REPORT
+======================================================================
+
+======================================================================
+FINAL UNIFIED DATASET
+======================================================================
+Rows before final dedup: 5,143
+Rows after final dedup : 5,127
+
+Class distribution:
+  Bored       :      17 (  0.3%)
+  Confident   :     730 ( 14.2%)
+  Confused    :     754 ( 14.7%)
+  Curious     :   1,337 ( 26.1%)
+  Frustrated  :   2,289 ( 44.6%)
+
+Source contribution:
+  GoEmotions          : 3,581
+  EmpatheticDialogues : 1,546
+
+----------------------------------------------------------------------
+LIMITATION -- Bored class
+----------------------------------------------------------------------
+Bored has 17 rows (0.3% of the dataset), derived entirely from literal keyword matching on GoEmotions neutral/disappointment text. No other dataset here has a boredom-equivalent label, and no synthetic data was generated to pad this class, per project decision. This class is expected to be the smallest and most narrowly-worded of the five -- the model will likely generalize to boredom expressed in similar phrasing better than to boredom expressed in novel ways. This is a known, documented limitation, not an implementation bug.
+----------------------------------------------------------------------
