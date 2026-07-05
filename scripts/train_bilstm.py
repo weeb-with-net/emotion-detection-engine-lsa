@@ -52,7 +52,7 @@ MODEL_DIR = Path("models/bilstm")
 MAX_SEQ_LEN = 80
 GAMMA = 2.0            # fixed per Epic 2 T3 specification
 VAL_SPLIT = 0.15
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 MAX_EPOCHS = 30
 EARLY_STOPPING_PATIENCE = 4
 
