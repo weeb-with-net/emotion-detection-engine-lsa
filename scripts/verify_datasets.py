@@ -55,13 +55,18 @@ def check_isear() -> bool:
     if not csv_path.exists():
         print(f"  [FAIL] {csv_path} not found")
         return False
-
-    df = pd.read_csv(csv_path, header=None, names=["emotion", "text"])
+    df = pd.read_csv(
+        csv_path,
+        header=None,
+        names=["emotion", "text", "_unused"]
+    )
+    # Remove the empty third column
+    df = df.drop(columns=["_unused"], errors="ignore")
     print(f"  [OK] ISEAR.csv loaded, {len(df)} rows")
-    print(f"  Emotion labels found: {sorted(df['emotion'].dropna().unique())}")
+    print(f"  Emotion labels found: {sorted(df['emotion'].unique())}")
     print(f"  Sample text: {df.iloc[0]['text']!r}")
+    
     return True
-
 
 def main() -> None:
     results = {
