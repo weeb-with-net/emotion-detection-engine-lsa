@@ -1,12 +1,31 @@
+# Python Version
+# Developed and tested with Python 3.12.10
+'''
+# PyTorch GPU build for RTX 50-series (Blackwell / sm_120) support.
+# This extra index must come first so pip knows where to find the CUDA 12.8 wheels.
+--extra-index-url https://download.pytorch.org/whl/cu128
+# --- Emotion modeling: BERT (PyTorch) ---
+# GPU-enabled — uses the --extra-index-url above to get CUDA 12.8 builds
+# with sm_120 (Blackwell) kernels needed for RTX 50-series GPUs.
+torch
+torchvision
+torchaudio
+transformers==4.44.2
+
+If above method fails, try this following command to install PyTorch with CUDA 12.8 support for RTX 50-series GPUs (Blackwell / sm_120): 
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+pip install -r requirements.txt
+'''
 # --- Web UI & AI integration ---
 streamlit==1.37.1
 google-generativeai==0.8.3
 python-dotenv==1.0.1
 
-# --- Emotion modeling ---
-tensorflow==2.16.1        # BiLSTM (Keras)
-torch==2.3.1              # BERT
-transformers==4.44.2      # BERT tokenizer/model
+# --- Emotion modeling: BiLSTM (TensorFlow) ---
+# CPU-only is intentional, not a compromise: BiLSTM is a small model, and
+# TensorFlow dropped native Windows GPU support after v2.10 (GPU would need WSL2). Since I had a Ryzen 9 9900x, training on CPU was faster than relying on kaggle.
+tensorflow-cpu==2.16.1
+
 
 # --- NLP ---
 nltk==3.9.1
