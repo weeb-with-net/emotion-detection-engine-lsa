@@ -1,3 +1,10 @@
+"""
+Sanity check for src/persistence/csv_logger.py.
+
+Verifies interaction logging, automatic CSV creation, append-only history,
+and deduplication of emotion-response mappings.
+"""
+
 import os
 import sys
 

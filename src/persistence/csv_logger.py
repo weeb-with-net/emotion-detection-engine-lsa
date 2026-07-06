@@ -8,6 +8,7 @@ CSV persistence for interaction logging.
 """
 import csv
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 EXAMPLES_PATH = Path("logs/emotion_response_examples.csv")
@@ -27,7 +28,7 @@ def _ensure_header(path: Path, header: list) -> None:
 def log_interaction(text: str, emotion: str, confidence: float, response: str, field: str) -> None:
     """Append one interaction, then update the emotion->response mapping."""
     _ensure_header(EXAMPLES_PATH, EXAMPLES_HEADER)
-    timestamp = datetime.now().isoformat(timespec="seconds")
+    timestamp = datetime.now(ZoneInfo("Asia/Kolkata")).isoformat(timespec="seconds")
 
     with open(EXAMPLES_PATH, "a", newline="", encoding="utf-8") as f:
         csv.writer(f).writerow([text, emotion, confidence, response, field, timestamp])
