@@ -1,15 +1,11 @@
 """
-Builds the unified, single-label emotion dataset from the three approved
-raw sources: GoEmotions, EmpatheticDialogues, ISEAR.
+Builds the unified emotion dataset from the approved raw datasets.
 
-This module only builds and reports on the dataset -- it does not clean
-text or tokenize (see text_cleaning.py / tokenization.py for that, run
-as a separate step by scripts/clean_and_tokenize.py). Keeping these
-concerns separate means you can re-run label mapping without re-fitting
-the tokenizer, and vice versa.
-
-All logic here is deterministic: same input files always produce the
-same output rows in the same order. No randomness, no synthetic data.
+This module:
+- Loads the raw datasets.
+- Maps source labels to the project's target classes.
+- Removes duplicate samples.
+- Produces the unified dataset used for model training.
 """
 
 from pathlib import Path
@@ -35,8 +31,7 @@ GOEMOTIONS_EMOTION_COLUMNS = [
     "relief", "remorse", "sadness", "surprise", "neutral",
 ]
 
-AGREEMENT_THRESHOLD = 2  # minimum raters that must agree on a label,
-                          # matching GoEmotions' own official benchmark
+AGREEMENT_THRESHOLD = 2  # Minimum annotator agreement required for a label.
 
 
 # ---------------------------------------------------------------------------
@@ -57,16 +52,10 @@ def load_goemotions_raw() -> pd.DataFrame:
 
 def deduplicate_goemotions(raw_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Collapses rater-level rows (one row per annotator per comment) into
-    one row per unique comment, keeping only labels that >=2 raters
-    agreed on. Returns a DataFrame with columns [id, text, <agreed emotion
-    columns as 0/1>].
-
-    This is the deduplication step required before any label mapping --
-    see the chat explanation for why skipping this risks train/val
-    leakage (the same comment appearing multiple times under different
-    rater labels).
+    Collapse GoEmotions from rater-level annotations into one row per
+    comment using the configured agreement threshold.
     """
+
     n_raw_rows = len(raw_df)
     n_unique_ids = raw_df["id"].nunique()
 
@@ -74,8 +63,6 @@ def deduplicate_goemotions(raw_df: pd.DataFrame) -> pd.DataFrame:
     agg = grouped[GOEMOTIONS_EMOTION_COLUMNS].sum()
     agreed = (agg >= AGREEMENT_THRESHOLD).astype(int)
 
-    # text should be identical across all rater rows for a given id;
-    # take the first occurrence.
     text_lookup = raw_df.groupby("id")["text"].first()
     agreed["text"] = text_lookup
     agreed = agreed.reset_index()
@@ -91,11 +78,9 @@ def deduplicate_goemotions(raw_df: pd.DataFrame) -> pd.DataFrame:
 
 def map_goemotions_to_target(agreed_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Applies GOEMOTIONS_MAP with mutual-exclusivity enforcement: a comment
-    is only kept for a target class if exactly one target class's source
-    label(s) are agreed-upon for it. Also returns the leftover pool
-    (comments not claimed by any class) so weak_label_bored() can search
-    it without re-reading the raw data.
+    Map GoEmotions labels to the target emotion classes.
+
+    Rows matching multiple target classes are excluded.
     """
     rows = []
     claimed_mask = pd.Series(False, index=agreed_df.index)
@@ -132,10 +117,8 @@ def map_goemotions_to_target(agreed_df: pd.DataFrame) -> pd.DataFrame:
 
 def weak_label_bored(unclaimed_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Weak-labels "Bored" using literal keyword matching, restricted to
-    GoEmotions rows already agreed as neutral/disappointment and not
-    already claimed by another target class. Real text only -- no
-    synthetic generation, per project constraints.
+    Identify boredom-related samples using keyword matching on
+    eligible GoEmotions entries.
     """
     pool_mask = unclaimed_df[BORED_SEARCH_SOURCE_LABELS].any(axis=1)
     pool = unclaimed_df[pool_mask]
@@ -184,11 +167,8 @@ def load_empathetic_dialogues_raw() -> pd.DataFrame:
 
 def deduplicate_empathetic_dialogues(raw_df: pd.DataFrame) -> pd.DataFrame:
     """
-    The raw file repeats each conv_id's situation text once per dialogue
-    turn. Deduplicating by conv_id (keeping the first occurrence of the
-    context + prompt) prevents the same situation from being counted
-    multiple times, which would otherwise over-represent longer
-    conversations in the final dataset.
+    Remove duplicate conversations while preserving one prompt
+    per conversation.
     """
     n_raw_rows = len(raw_df)
     deduped = raw_df.drop_duplicates(subset="conv_id", keep="first")[["conv_id", "context", "prompt"]].copy()

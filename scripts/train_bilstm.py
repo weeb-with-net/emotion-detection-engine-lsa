@@ -2,20 +2,15 @@
 Trains the BiLSTM emotion classifier on the preprocessed, tokenized data
 from Epic 2 T2.
 
-Run from the project root, after scripts/clean_and_tokenize.py:
+Run:
     python scripts/train_bilstm.py
 
-Writes:
-    models/bilstm/model.keras
-    models/bilstm/training_history.png
-    models/bilstm/confusion_matrix.png
-    models/bilstm/classification_report.txt
-
-Reproducibility: fixed random seeds for numpy, tensorflow, and the
-train/val split. Class weights (focal loss alpha) are always computed
-fresh from the actual training split -- never hardcoded -- so re-running
-this after any change to preprocessing will automatically pick up the
-new class distribution.
+Outputs:
+    models/bilstm/
+        - model.keras
+        - training_history.png
+        - confusion_matrix.png
+        - classification_report.txt
 """
 
 import json

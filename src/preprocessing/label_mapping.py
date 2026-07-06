@@ -1,17 +1,8 @@
 """
-Central definitions for mapping each dataset's native emotion labels to
-the project's five target classes:
+Central configuration for mapping dataset-specific emotion labels
+to the project's five target classes.
 
-    Bored, Confident, Confused, Curious, Frustrated
-
-Nothing in this file executes anything -- it's pure configuration -- so
-every mapping decision lives in exactly one place and is documented
-inline. See data/processed/label_mapping_report.txt (written by
-scripts/build_dataset.py) for the actual counts these rules produce on
-the real downloaded data.
-
-None of these decisions are final/sacred -- if you disagree with a
-mapping, change it here and re-run scripts/build_dataset.py.
+Modify the mappings here and rebuild the dataset if needed.
 """
 
 TARGET_CLASSES = ["Bored", "Confident", "Confused", "Curious", "Frustrated"]
@@ -22,36 +13,16 @@ RANDOM_SEED = 42  # kept for any future step that needs determinism
 # ---------------------------------------------------------------------------
 # GoEmotions (27 emotions + neutral, multi-label, rater-level raw CSVs)
 # ---------------------------------------------------------------------------
-# GoEmotions is multi-label: a single comment can have several emotions
-# agreed upon simultaneously. Because our downstream classifier is
-# single-label (one of 5 classes per text), dataset_builder.py enforces
-# mutual exclusivity: a comment is only accepted for a target class if
-# NONE of the other mapped source labels below are also agreed-upon for
-# that same comment. Comments that hit more than one target class are
-# dropped rather than arbitrarily assigned to either one.
+# GoEmotions is multi-label. Ambiguous mappings are filtered
+# during dataset construction.
 GOEMOTIONS_MAP = {
     "Confused": ["confusion"],     # exact semantic match
     "Curious": ["curiosity"],      # exact semantic match
-    "Confident": [],                # deliberately empty: GoEmotions' closest
-                                    # candidate is "pride", which is
-                                    # post-achievement satisfaction, not the
-                                    # anticipatory self-assurance "confident"
-                                    # implies. Confident is sourced only from
-                                    # EmpatheticDialogues (see EMPATHETIC_MAP)
-                                    # to avoid diluting the class with a
-                                    # semantically different emotion.
-    "Frustrated": ["annoyance"],   # "anger" deliberately excluded --
-                                    # anger is full-blown rage, much more
-                                    # intense than a student stuck on a
-                                    # problem. Mixing them in would skew
-                                    # the class toward the wrong register.
+    "Confident": [],                # No suitable GoEmotions equivalent.
+    "Frustrated": ["annoyance"],   # Uses "annoyance" only.
 }
 
-# Lowest-arousal GoEmotions categories, used only as the candidate pool
-# for the Bored keyword search (see BORED_KEYWORDS below). Restricting
-# the search to these categories avoids pulling in text that already has
-# a strong, unrelated emotional signal (e.g. searching inside "joy" rows
-# for the word "bored" would mostly find sarcasm, not real boredom).
+# Candidate labels for boredom keyword matching.
 BORED_SEARCH_SOURCE_LABELS = ["neutral", "disappointment"]
 
 # Literal keyword match used to weak-label "Bored" from real text only.
@@ -66,8 +37,7 @@ BORED_KEYWORDS = [
 # ---------------------------------------------------------------------------
 # EmpatheticDialogues (32 emotions, single label per conversation)
 # ---------------------------------------------------------------------------
-# Single-label at the conversation level, so no mutual-exclusivity
-# handling is needed here (unlike GoEmotions).
+# Single-label dataset.
 EMPATHETIC_MAP = {
     "Confident": ["confident"],   # exact match
     "Frustrated": ["annoyed"],    # "angry"/"furious" excluded for the
@@ -87,8 +57,5 @@ EMPATHETIC_MAP = {
 # is a documented, inspected decision -- not a missed opportunity.
 ISEAR_MAP = {}
 
-# Known data-quality issue in the public ISEAR mirror: one row has the
-# emotion mistyped as "guit" instead of "guilt". Normalized regardless
-# of whether ISEAR ends up contributing rows, since it's a correctness
-# fix, not a mapping decision.
+# Normalize known label typos.
 ISEAR_TYPO_FIXES = {"guit": "guilt"}

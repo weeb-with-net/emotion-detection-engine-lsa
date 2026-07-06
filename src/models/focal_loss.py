@@ -1,38 +1,26 @@
 """
-Sparse categorical focal loss for multi-class classification with severe
-class imbalance.
+Implementation of Sparse Categorical Focal Loss for multi-class
+emotion classification.
 
-Focal loss extends cross-entropy with a (1 - p_t)^gamma
-term that down-weights already-easy, well-classified examples so the model
-spends more of its gradient budget on hard/rare examples. The per-class
-`alpha` term further re-weights each class's contribution to the loss.
+This loss function helps reduce the impact of class imbalance by
+placing greater emphasis on harder-to-classify examples.
 
-Per project decision: alpha is ALWAYS computed automatically from the
-actual training labels via sklearn's compute_class_weight (see
-compute_alpha_from_labels below) -- never hardcoded. If the upstream
-preprocessing changes and the class distribution shifts, alpha updates
-automatically the next time this is called, rather than silently going
-stale.
+Class weights are computed dynamically from the training data during
+training rather than being hardcoded.
 """
 
 import numpy as np
 import tensorflow as tf
 from sklearn.utils.class_weight import compute_class_weight
 
-# Any single class ending up with an automatically-computed weight above
-# this is flagged (not altered) -- a very large weight on a very rare
-# class combined with focal loss's own down-weighting of easy examples
-# can make training noisy on the few batches that contain that class.
+# Warn when a class receives an unusually large focal-loss weight.
 ALPHA_WARNING_THRESHOLD = 15.0
-
 
 def compute_alpha_from_labels(y_train: np.ndarray, num_classes: int) -> np.ndarray:
     """
-    Computes per-class alpha weights from the actual training labels
-    using sklearn's 'balanced' scheme: weight_c = n_samples / (n_classes * n_c).
+    Compute per-class alpha weights from the training labels.
 
-    This must be called on the TRAINING split only (not the full dataset),
-    so the weighting reflects what the model actually trains on.
+    Uses scikit-learn's balanced class-weight formula.
     """
     class_indices = np.arange(num_classes)
     weights = compute_class_weight(class_weight="balanced", classes=class_indices, y=y_train)
@@ -47,11 +35,12 @@ def compute_alpha_from_labels(y_train: np.ndarray, num_classes: int) -> np.ndarr
 
 def sparse_categorical_focal_loss(alpha: np.ndarray, gamma: float = 2.0, num_classes: int = 5):
     """
-    Returns a Keras compatible loss function: loss(y_true, y_pred) where
-    y_true is integer class indices (shape (batch,)) and y_pred is softmax
-    probabilities (shape (batch, num_classes)).
+    Create a Keras-compatible sparse categorical focal loss function.
 
-    gamma=2.0 matches the project specification (Epic 2 T3 doc).
+    Parameters:
+        alpha: Per-class weighting factors.
+        gamma: Focusing parameter for difficult examples.
+        num_classes: Number of target classes.
     """
     alpha_tensor = tf.constant(alpha, dtype=tf.float32)
 

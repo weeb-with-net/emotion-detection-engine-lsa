@@ -1,11 +1,6 @@
 """
 Tokenizer fitting, sequence padding, and label encoding for the BiLSTM
 input pipeline.
-
-Kept separate from dataset_builder.py / text_cleaning.py so each concern
-(dataset unification, text cleaning, tokenization) can be re-run
-independently -- e.g. you can refit the tokenizer with a different
-vocab size without re-running label mapping.
 """
 
 import pickle
@@ -35,10 +30,7 @@ def texts_to_padded(tokenizer: Tokenizer, texts) -> np.ndarray:
 
 def encode_labels(labels) -> np.ndarray:
     """
-    Encodes emotion strings to integer indices using the fixed order in
-    TARGET_CLASSES (not sklearn's alphabetical LabelEncoder default),
-    so the mapping is stable and human-readable regardless of which
-    classes happen to be present in a given run.
+    Convert emotion labels to integer indices using TARGET_CLASSES.
     """
     class_to_index = {cls: i for i, cls in enumerate(TARGET_CLASSES)}
     return np.array([class_to_index[label] for label in labels])

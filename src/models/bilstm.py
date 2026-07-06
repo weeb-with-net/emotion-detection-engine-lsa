@@ -2,14 +2,9 @@
 BiLSTM architecture for emotion classification: Embedding -> Bidirectional
 LSTM -> Dropout -> Dense(softmax).
 
-Matches the Epic 2 T3 specification (Embedding 128-dim, Bidirectional LSTM
-128 units). Vocabulary size is read from the actual fitted tokenizer
-rather than hardcoded at 30,000, since the real dataset almost certainly
-uses fewer unique tokens than the tokenizer's cap -- see the training
-script for why the resulting parameter count won't exactly match the
-doc's reference figure of 4.1M.
+The vocabulary size is determined from the fitted tokenizer created
+during preprocessing.
 """
-
 from tensorflow.keras import layers, models
 
 

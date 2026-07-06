@@ -3,12 +3,17 @@ Local equivalent of the GPU Detection & Environment Setup
 step, adapted for the local RTX 5070 Ti setup instead of Kaggle's dual-GPU
 environment.
 
-Run this from the project root:
-    python scripts/verify_environment.py
+Checks that the local machine is ready for model training.
 
-This does NOT install or change any package versions -- it only reports
-what's already installed, since the local env was already verified in
-Epic 1. Keep this output for documentation purposes (Epic 2 T1 deliverable).
+Verifies:
+- Python version
+- TensorFlow installation
+- PyTorch CUDA support
+- GPU detection
+- Required libraries
+
+Run:
+    python scripts/verify_environment.py
 """
 
 import sys

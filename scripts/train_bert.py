@@ -2,8 +2,6 @@
 Fine-tunes bert-base-uncased for 5-class emotion classification, per the
 Epic 2 T5 specification: 3 epochs, AdamW, learning rate 2e-5.
 
-BERT fine-tuning script for the Emotion Detection & Learning Support Engine.
-
 This script:
 - Loads the cleaned emotion dataset.
 - Fine-tunes bert-base-uncased for 5-class emotion classification.

@@ -1,12 +1,9 @@
 """
-Regex-based text cleaning for the unified emotion dataset.
+Text cleaning utilities for the BiLSTM preprocessing pipeline.
 
-Design goal: normalize text for the BiLSTM tokenizer while preserving
-punctuation that carries emotional signal (repeated "!" or "?", trailing
-"..."). Stripping all punctuation would throw away information a
-frustrated or excited student's phrasing actually encodes.
+Normalizes text while preserving punctuation that may carry
+emotional information.
 """
-
 import re
 
 import contractions
@@ -23,18 +20,16 @@ _MULTI_WHITESPACE = re.compile(r"\s+")
 
 def clean_text(text: str) -> str:
     """
-    Cleans a single string for tokenization. Safe to call with pandas'
-    .apply(). Returns an empty string for null/NaN input rather than
-    raising, since a handful of source rows can be empty after upstream
-    filtering.
+    Clean a text string for tokenization.
+
+    Returns an empty string for missing values.
     """
     if text is None or (isinstance(text, float)):
         return ""
 
     text = str(text).lower()
 
-    # EmpatheticDialogues-specific artifact; harmless no-op for the
-    # other two sources.
+    # Restore literal commas.
     text = text.replace("_comma_", ",")
 
     text = _URL_PATTERN.sub(" ", text)
@@ -44,21 +39,14 @@ def clean_text(text: str) -> str:
     try:
         text = contractions.fix(text)
     except Exception:
-        # contractions.fix can occasionally choke on unusual unicode;
-        # fall back to the un-expanded text rather than failing the
-        # whole pipeline over a handful of rows.
-        pass
+        pass    # Ignore malformed text.
 
-    # Bound (but don't erase) emphasis punctuation -- "!!!!!" and "???"
-    # both signal something the model should be able to use, but we cap
-    # the run length so the tokenizer doesn't treat "!!" and "!!!!!!!" as
-    # totally distinct "words".
+    # Limit repeated punctuation.
     text = _REPEATED_BANG.sub("!!!", text)
     text = _REPEATED_QUESTION.sub("???", text)
     text = _REPEATED_ELLIPSIS.sub("...", text)
 
-    # Strip everything else except letters, digits, whitespace, and the
-    # emotion-carrying punctuation kept above.
+    # Strip everything else except letters, digits, whitespace, and the emotion-carrying punctuation kept above.
     text = _NON_ALLOWED_CHARS.sub(" ", text)
     text = _MULTI_WHITESPACE.sub(" ", text).strip()
 

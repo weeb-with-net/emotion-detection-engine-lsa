@@ -2,35 +2,17 @@
 Fine-tunes the baseline BiLSTM model on real student interaction data,
 once such data exists.
 
-CONTEXT: this project has three approved training datasets (GoEmotions,
-EmpatheticDialogues, ISEAR), and none of them contain student/academic
-text. Genuine "student-specific" data can only come from real usage of
-the deployed Streamlit app (which logs every interaction to CSV) -- so
-there is nothing to fine-tune on until the app has been used enough to
-accumulate a meaningful log. Running this script before that point
-prints a clear message and exits without doing anything -- it does not
-fabricate a result.
+Usage:
+    python scripts/finetune_bilstm.py --student-data path/to/student_data.csv
 
-Run from the project root, once a real student-interaction CSV exists
-(same schema as data/processed/cleaned_dataset.csv: columns `text`,
-`emotion`):
+Expected CSV format:
+    text, emotion
 
-    python scripts/finetune_bilstm.py --student-data path/to/real_logged_data.csv
-
-Design choices (deliberately different from scripts/train_bilstm.py):
-  - Uses the SAME tokenizer the baseline model trained with (loaded from
-    models/bilstm/tokenizer.pickle), never refit. Refitting would change
-    the word->index mapping the embedding layer already learned,
-    silently corrupting every existing weight.
-  - Freezes the embedding layer during fine-tuning (matches the Epic 2
-    T4 reference approach), so a comparatively small student dataset
-    can't overwrite word representations learned from the much larger
-    base corpus.
-  - Uses a small learning rate (1e-4) and plain sparse categorical
-    cross-entropy rather than focal loss -- fine-tuning here is about
-    adapting to new vocabulary/phrasing, not re-fighting class
-    imbalance, and a gentler setup avoids destabilizing already-good
-    weights.
+Notes:
+- Reuses the tokenizer and label mapping from the baseline model.
+- Intended for future domain adaptation after deployment.
+- If no student dataset is provided, the script exits without modifying
+  the existing model.
 """
 
 import argparse
