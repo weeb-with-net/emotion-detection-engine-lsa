@@ -1,0 +1,36 @@
+======================================================================
+MODEL INTEGRATION READINESS REPORT
+======================================================================
+
+NOTE: TensorFlow and PyTorch/transformers cannot coexist in one process (confirmed -- causes a hard segfault). Each model below is loaded in its own isolated subprocess. Your Streamlit app will need the same isolation strategy.
+
+== BiLSTM file inventory ==
+  model.keras              : OK
+  tokenizer.pickle         : OK
+  label_encoder.json       : OK
+
+== BERT file inventory ==
+  Found 11 files: ['.gitkeep', 'classification_report.txt', 'config.json', 'confusion_matrix.png', 'history.json', 'model.safetensors', 'special_tokens_map.json', 'tokenizer.json', 'tokenizer_config.json', 'training_history.png', 'vocab.txt']
+  Has config.json                : True
+  Has model weights file         : True
+  Has at least one tokenizer file: True
+
+== BiLSTM load + inference test (isolated subprocess) ==
+  Sample input   : "I don't understand this concept at all, can you explain it again?"
+  Predicted class: Confused (confidence 0.582)
+  Status: OK
+
+== BERT load + inference test (isolated subprocess) ==
+  Sample input   : "I don't understand this concept at all, can you explain it again?"
+  Predicted class: Confused (confidence 0.979)
+  Status: OK
+
+== Cross-model label order consistency ==
+  TARGET_CLASSES (source of truth): ['Bored', 'Confident', 'Confused', 'Curious', 'Frustrated']
+  BiLSTM label order              : ['Bored', 'Confident', 'Confused', 'Curious', 'Frustrated']
+  BERT label order                : ['Bored', 'Confident', 'Confused', 'Curious', 'Frustrated']
+  Status: OK -- all three orderings match exactly.
+
+======================================================================
+VERDICT: READY for Streamlit integration
+======================================================================
