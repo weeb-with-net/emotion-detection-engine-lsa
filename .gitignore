@@ -19,3 +19,8 @@ logs/*.csv
 
 # Raw datasets
 data/raw/
+
+# Temporary debugging scripts
+scripts/genai_authkey_test.py
+scripts/throwaway.py
+scripts/test_ui.py

@@ -7,11 +7,14 @@
 # --- Emotion modeling: BERT (PyTorch) ---
 # GPU-enabled — uses the --extra-index-url above to get CUDA 12.8 builds
 # with sm_120 (Blackwell) kernels needed for RTX 50-series GPUs.
+'''
+#--- Emotion Modeling: BERT (Pytorch) ---
 torch
 torchvision
 torchaudio
 transformers==4.44.2
 
+'''
 If above method fails, try this following command to install PyTorch with CUDA 12.8 support for RTX 50-series GPUs (Blackwell / sm_120): 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements.txt
@@ -20,6 +23,7 @@ pip install -r requirements.txt
 streamlit==1.37.1
 google-generativeai==0.8.3
 python-dotenv==1.0.1
+openai==1.51.0
 
 # --- Emotion modeling: BiLSTM (TensorFlow) ---
 # CPU-only is intentional, not a compromise: BiLSTM is a small model, and
