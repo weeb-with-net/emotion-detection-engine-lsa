@@ -15,7 +15,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-REQUIRED_ENV_VARS = ["GOOGLE_API_KEY"]
+REQUIRED_ENV_VARS = ["GEMINI_API_KEY"]
+
+# Not required - LLM_PROVIDER defaults to gemini, this key is only needed
+# if you actually switch to LLM_PROVIDER=openrouter. So just an FYI check,
+# doesn't fail the script if missing.
+OPTIONAL_ENV_VARS = ["OPENROUTER_API_KEY"]
 
 # (path, is_directory, required_now)
 # required_now=False means "expected later" (e.g. after Epic 2 training) —
@@ -25,7 +30,7 @@ CHECKS = [
     ("data/emotion_text_dataset.csv", False, False),
     ("data/GoEmotions", True, False),
     ("data/empatheticdialogues", True, False),
-    ("models/bltsm", True, True),
+    ("models/bilstm", True, True),
     ("models/bert_emotion_model_final", True, True),
     ("logs", True, True),
 ]
@@ -49,6 +54,14 @@ def main() -> int:
         else:
             masked = val[:4] + "..." + val[-2:] if len(val) > 8 else "****"
             print(f"  [OK] {var} = {masked}")
+
+    for var in OPTIONAL_ENV_VARS:
+        val = os.getenv(var)
+        if val:
+            masked = val[:4] + "..." + val[-2:] if len(val) > 8 else "****"
+            print(f"  [OK] {var} = {masked} (optional, only used if LLM_PROVIDER=openrouter)")
+        else:
+            print(f"  [INFO] {var} not set (fine unless you're using LLM_PROVIDER=openrouter)")
 
     print("\n=== Folder structure ===")
     root = Path(__file__).parent
