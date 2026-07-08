@@ -1,10 +1,10 @@
 """
-Orchestrates response generation: build the prompt, call the active LLM
-provider (see llm_client.py), and fall back to a predefined template on
-any failure. Disabled, provider-unavailable, and exception-during-call
-all land on the same template fallback per T2's spec — this supersedes
-an earlier mockup (T1) that returned a generic "AI response unavailable"
-string on error instead.
+Main function for generating the AI response: builds the prompt, calls
+whichever LLM provider is active (see llm_client.py), and falls back to
+the template responses if anything goes wrong. Disabled / provider down
+/ error - all three cases just fall back to templates, matches what the
+T2 doc actually wants (the T1 mockup had a different generic error
+message but that got replaced by this).
 """
 from src.generation.llm_client import generate_ai_response
 from src.generation.prompt_builder import build_gemini_prompt

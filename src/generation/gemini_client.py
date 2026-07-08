@@ -1,15 +1,23 @@
 """
-Thin wrapper around the Gemini SDK. Deliberately does not build the
-prompt or handle fallback — those live in prompt_builder.py and
-response_generator.py respectively, so this stays swappable/mockable in
-isolation and only owns the actual API call.
-
-Uses the deprecated google-generativeai package on purpose (see project
-notes) — google-genai migration is deferred as known technical debt,
-not planned for this project.
-
-Loads .env itself via load_dotenv() so this module works standalone
-without depending on the caller (e.g. app.py) having loaded it first.
+Wrapper for calling the Gemini API. Doesn't build the prompt itself
+(that's in prompt_builder.py) and doesn't handle fallback (that's in
+response_generator.py) - keeping it separate so it's easy to test/swap.
+ 
+Using the old google-generativeai package here even though it's
+deprecated now, since it was already set up in Epic 1 and switching
+SDKs mid-project isn't worth the risk this close to deadline.
+ 
+NOTE: Gemini API key keeps throwing 401 ACCESS_TOKEN_TYPE_UNSUPPORTED.
+Pretty sure this isn't our bug - Google recently changed how API keys
+work (old AIza keys -> new AQ keys) and a bunch of people are hitting
+the same error on Google's own dev forum. Tested the same setup with
+OpenRouter + the official OpenAI SDK and that worked fine, so it seems
+to be a Google-side issue with the new key format, not something wrong
+in this file. Either way, response_generator.py already falls back to
+the template responses if this call fails, so the app still works.
+ 
+Loads .env itself so this file works even if nothing else loaded it
+first.
 """
 import os
 

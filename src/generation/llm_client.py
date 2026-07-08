@@ -1,17 +1,19 @@
 """
-Dispatches to whichever LLM provider LLM_PROVIDER selects, so callers
-(response_generator.py) don't need to know or care which one is active.
-Defaults to "gemini" — the project's documented/primary provider — so
-the app behaves identically for anyone who clones the repo without this
-env var set. LLM_PROVIDER=openrouter is a documented contingency for the
-external Gemini auth issue (see gemini_client.py), not a permanent
-architecture change.
-
-call_openrouter is imported lazily (inside the branch, not at module
-top) so openrouter_client.py's client init — which raises if
-OPENROUTER_API_KEY is unset — never runs unless openrouter is actually
-selected. Without this, anyone using the gemini default without an
-OpenRouter key would crash on import alone.
+Picks which LLM provider to use based on LLM_PROVIDER env var, so
+response_generator.py doesn't need to know or care which one is active.
+ 
+Defaults to "gemini" (the main provider for this project) if the env
+var isn't set, so nothing breaks for anyone who clones the repo without
+knowing about this. LLM_PROVIDER=openrouter is just a backup option for
+when Gemini auth is acting up (see gemini_client.py), not a real switch
+in the project's architecture.
+ 
+call_openrouter only gets imported inside the if-branch, not at the top
+of the file. Reason: openrouter_client.py sets up its API client as soon
+as it's imported, and that crashes if OPENROUTER_API_KEY isn't set. If
+we imported it at the top always, then even people just using the
+default Gemini setup (no OpenRouter key at all) would get a crash. So
+it only imports when actually needed.
 """
 import os
 from dotenv import load_dotenv

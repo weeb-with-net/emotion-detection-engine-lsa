@@ -8,7 +8,7 @@ __pycache__/
 venv/
 
 # Model weights (large binaries — track separately, e.g. via a release or Drive link)
-models/bltsm/*
+models/biltsm/*
 models/bert_emotion_model_final/*
 !models/bltsm/.gitkeep
 !models/bert_emotion_model_final/.gitkeep

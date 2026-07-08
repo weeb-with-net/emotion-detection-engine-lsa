@@ -1,15 +1,17 @@
 """
-Thin wrapper around OpenRouter, via the OpenAI-compatible SDK. Same
-shape as gemini_client.py — no prompt-building, no fallback logic, just
-the API call — so llm_client.py can treat both providers identically.
-
-Contingency provider only (see llm_client.py) for the current external
-Gemini auth rollout issue — not the project's primary/documented
-provider. Model pinned to deepseek/deepseek-chat-v3.1, the one verified
-working during diagnosis.
-
-Loads .env itself via load_dotenv() so this module works standalone
-without depending on the caller having loaded it first.
+Wrapper for calling an LLM through OpenRouter (OpenAI-compatible API).
+Same shape as gemini_client.py - no prompt building, no fallback here,
+just the actual API call.
+ 
+This is only a backup provider for when Gemini auth is being weird (see
+gemini_client.py), not the main provider for this project.
+ 
+Using a free-tier model (tencent/hy3:free) through a separate OpenRouter
+account made for this project, so testing doesn't eat into personal
+API credits since multiple people (graders etc) might run this.
+ 
+Loads .env itself so this file works even if nothing else loaded it
+first.
 """
 import os
 
