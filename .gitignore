@@ -10,7 +10,7 @@ venv/
 # Model weights (large binaries — track separately, e.g. via a release or Drive link)
 models/bilstm/*
 models/bert_emotion_model_final/*
-!models/blstm/.gitkeep
+!models/bilstm/.gitkeep
 !models/bert_emotion_model_final/.gitkeep
 
 # Logs & generated data
