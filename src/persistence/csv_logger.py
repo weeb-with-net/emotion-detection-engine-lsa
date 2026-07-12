@@ -45,3 +45,13 @@ def _update_mapping(emotion: str, response: str) -> None:
     if (emotion, response) not in existing:
         with open(MAPPING_PATH, "a", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow([emotion, response])
+
+
+def count_examples() -> int:
+    """How many rows are in the examples csv right now - for the sidebar.
+    Returns 0 if the file doesn't exist yet (nobody's submitted anything
+    this session, or it's a fresh clone with no logs/ folder)."""
+    if not EXAMPLES_PATH.exists():
+        return 0
+    with open(EXAMPLES_PATH, "r", newline="", encoding="utf-8") as f:
+        return sum(1 for _ in csv.DictReader(f))
