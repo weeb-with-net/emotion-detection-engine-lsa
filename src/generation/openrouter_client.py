@@ -29,6 +29,7 @@ _client = OpenAI(
 def call_openrouter(prompt: str) -> str:
     response = _client.chat.completions.create(
         model="tencent/hy3:free",
+        #model="poolside/laguna-m.1:free",
         messages=[{"role": "user", "content": prompt}],
     )
     return response.choices[0].message.content.strip()
