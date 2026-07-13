@@ -14,50 +14,39 @@ Always uses the simple field+emotion groupby instead - same as the
 mockup's own fallback branch, just without the (no-longer-meaningful)
 facet check in front of it.
 
-Chart builders are @st.cache_data'd on df - Streamlit hashes the actual
-dataframe content, so a chart only recomputes when emotion_history has
-actually changed, not on every rerun (typing in the text area, toggling
-a checkbox, etc).
+IMPORTANT: only the data transformations (value_counts, groupby, the
+timestamp formatting) are @st.cache_data'd - NOT the Plotly Figure
+objects themselves. Found the hard way: st.plotly_chart() mutates the
+Figure in place while serializing it for the browser (filling in layout
+defaults etc), so caching the actual Figure and reusing that same
+object on a later rerun hands the frontend a partially-mutated object
+from last time, not a clean one - caused a real white-screen crash
+(browser console: "Cannot read properties of undefined (reading
+'vertical')"), triggered by just changing the field dropdown after one
+completed analysis, no re-Analyze needed. Data transforms are plain
+DataFrames/Series (hashable, safe to cache) - Figures get built fresh
+from that cached data on every single render instead.
 """
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 
-#@st.cache_data
-def _build_emotion_pie(df: pd.DataFrame):
-    emotion_counts = df["emotion"].value_counts()
-    return px.pie(
-        values=emotion_counts.values,
-        names=emotion_counts.index,
-        title="Emotion Distribution",
-    )
+@st.cache_data
+def _emotion_counts(df: pd.DataFrame) -> pd.Series:
+    return df["emotion"].value_counts()
 
 
-#@st.cache_data
-def _build_confidence_timeline(df: pd.DataFrame):
+@st.cache_data
+def _timeline_data(df: pd.DataFrame) -> pd.DataFrame:
     df_copy = df.copy()
     df_copy["time"] = df_copy["timestamp"].dt.strftime("%H:%M:%S")
-    return px.line(
-        df_copy,
-        x="time",
-        y="confidence",
-        color="emotion",
-        title="Emotional Journey",
-        markers=True,
-    )
+    return df_copy
 
 
-#@st.cache_data
-def _build_field_emotion_bar(df: pd.DataFrame):
-    field_emotion = df.groupby(["field", "emotion"]).size().reset_index(name="count")
-    return px.bar(
-        field_emotion,
-        x="field",
-        y="count",
-        color="emotion",
-        title="Emotions by Study Field",
-    )
+@st.cache_data
+def _field_emotion_counts(df: pd.DataFrame) -> pd.DataFrame:
+    return df.groupby(["field", "emotion"]).size().reset_index(name="count")
 
 
 def render_analytics_dashboard() -> None:
@@ -70,7 +59,7 @@ def render_analytics_dashboard() -> None:
     df = pd.DataFrame(st.session_state.emotion_history)
     # only the plain columns charts actually use - bilstm_result/
     # bert_result/all_scores are dicts, which pandas can't hash, which
-    # was forcing st.cache_data into a slow pickle-based fallback
+    # would force st.cache_data into a slow pickle-based fallback
     # instead of actually caching. Slimming this down here fixes that.
     chart_df = df[["field", "emotion", "confidence", "timestamp"]]
 
@@ -79,9 +68,32 @@ def render_analytics_dashboard() -> None:
     with tab1:
         col1, col2 = st.columns(2)
         with col1:
-            st.plotly_chart(_build_emotion_pie(chart_df), use_container_width=True)
+            emotion_counts = _emotion_counts(chart_df)
+            fig1 = px.pie(
+                values=emotion_counts.values,
+                names=emotion_counts.index,
+                title="Emotion Distribution",
+            )
+            st.plotly_chart(fig1, use_container_width=True)
         with col2:
-            st.plotly_chart(_build_confidence_timeline(chart_df), use_container_width=True)
+            timeline_df = _timeline_data(chart_df)
+            fig2 = px.line(
+                timeline_df,
+                x="time",
+                y="confidence",
+                color="emotion",
+                title="Emotional Journey",
+                markers=True,
+            )
+            st.plotly_chart(fig2, use_container_width=True)
 
     with tab2:
-        st.plotly_chart(_build_field_emotion_bar(chart_df), use_container_width=True)
+        field_emotion = _field_emotion_counts(chart_df)
+        fig3 = px.bar(
+            field_emotion,
+            x="field",
+            y="count",
+            color="emotion",
+            title="Emotions by Study Field",
+        )
+        st.plotly_chart(fig3, use_container_width=True)
