@@ -1,10 +1,12 @@
 """
-Main Streamlit app - Epic 5 Story 1 (layout + session state) plus
-Story 2 (Analyze flow, model comparison, AI guidance, How I decided).
-Results panel follows Input -> Analyze -> Decision -> AI Guidance ->
-Model Comparison -> Explainability, so it reads as one flow instead of
-a pile of separate widgets. Trust-adapted phrasing intentionally not
-here yet - see EPIC5_POLISH_BACKLOG.md for what's held back and why.
+Main Streamlit app - Epic 5 Story 1 (layout + session state), Story 2
+(Analyze flow, model comparison, AI guidance, How I decided), and
+Story 3 (settings panel restructure, show_details toggle, analytics
+tabs skeleton). Results panel follows Input -> Analyze -> Decision ->
+AI Guidance -> Model Comparison -> Explainability, so it reads as one
+flow instead of a pile of separate widgets. Trust-adapted phrasing
+intentionally not here yet - see EPIC5_POLISH_BACKLOG.md for what's
+held back and why.
 """
 import streamlit as st
 
@@ -12,10 +14,13 @@ from src.inference.cached_loaders import get_bert_predictor, get_bilstm_predicto
 from src.orchestration.analysis_pipeline import run_analysis
 from src.orchestration.session_history import init_session_history, record_interaction
 from src.ui.ai_toggle import capture_ai_toggle
+from src.ui.analytics_dashboard import render_analytics_dashboard
+from src.ui.csv_prediction_toggle import capture_csv_prediction_toggle
 from src.ui.field_problem_capture import capture_field_and_problem
 from src.ui.model_comparison import render_model_comparison
 from src.ui.result_panel import render_ai_guidance, render_decision_summary, render_how_i_decided
 from src.ui.save_data_toggle import capture_save_data_toggle
+from src.ui.show_details_toggle import capture_show_details_toggle
 from src.ui.sidebar_dashboard import render_sidebar
 from src.ui.welcome_splash import show_welcome_splash
 
@@ -37,10 +42,18 @@ render_sidebar(bert_ready=bert_predictor is not None)
 
 st.title("🎓 AI Learning Assistant")
 
-st.subheader("📝 Tell us about your learning challenge")
-field, problem = capture_field_and_problem()
-ai_enabled = capture_ai_toggle()
-save_data = capture_save_data_toggle()
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader("📝 Tell us about your learning challenge")
+    field, problem = capture_field_and_problem()
+
+with col2:
+    st.subheader("⚙️ Settings")
+    ai_enabled = capture_ai_toggle()
+    save_data = capture_save_data_toggle()
+    show_details = capture_show_details_toggle()
+    use_csv_prediction = capture_csv_prediction_toggle()  # currently no effect on Analyze - see its own docstring
 
 if st.button("🔍 Analyze"):
     if not problem.strip():
@@ -64,6 +77,10 @@ if st.session_state.last_result:
     st.divider()
     render_decision_summary(result["decision"])
     render_ai_guidance(result["ai_response"])
-    render_model_comparison(result["bilstm_result"], result["bert_result"])
-    render_how_i_decided(result["decision"], result["bilstm_result"], result["bert_result"])
+    if show_details:
+        render_model_comparison(result["bilstm_result"], result["bert_result"])
+        render_how_i_decided(result["decision"], result["bilstm_result"], result["bert_result"])
+
+render_analytics_dashboard()
+
 
