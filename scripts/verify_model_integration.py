@@ -147,10 +147,17 @@ def main() -> None:
     log(lines, "=" * 70)
     log(
         lines,
-        "\nNOTE: TensorFlow and PyTorch/transformers cannot coexist in one "
-        "process (confirmed -- causes a hard segfault). Each model below "
-        "is loaded in its own isolated subprocess. Your Streamlit app will "
-        "need the same isolation strategy.",
+        "\nNOTE: TensorFlow and PyTorch/transformers caused a hard segfault "
+        "when first tested together in one process (confirmed at the time). "
+        "Each model below is loaded in its own isolated subprocess here, same "
+        "as that original finding recommended.\n"
+        "Re-tested since (test_isolation_minimal.py / test_isolation_realistic.py "
+        "at repo root) on Windows, Python 3.12.10, tensorflow-cpu 2.16.1, torch "
+        "2.11.0+cu128, transformers 4.44.2 - both import-only and full load+predict "
+        "passed 3/3 runs in-process, no crash. app.py currently loads both models "
+        "in-process based on that re-test. See DEPLOYMENT_NOTES.md before assuming "
+        "this holds on a different OS/platform (e.g. Hugging Face Spaces' Linux "
+        "container) -- re-run those same two scripts there before trusting it.",
     )
 
     bilstm_files_ok = check_bilstm_files(lines)

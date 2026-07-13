@@ -5,12 +5,23 @@ printing the result as JSON to stdout.
 
 Kept in a separate process from any PyTorch/transformers code: importing
 tensorflow and transformers (which pulls in torch) in the SAME process
-causes a hard segfault (verified directly -- reproduces even if neither
-library's model is ever touched, just from both being imported). This
-is a native-library conflict between the two frameworks, not a bug in
-this project's code, but it means the eventual Streamlit app needs the
-same kind of process isolation for its two models -- see the T6 report.
+caused a hard segfault when this was first tested (verified directly --
+reproduced even if neither library's model was ever touched, just from
+both being imported). This is a native-library conflict between the two
+frameworks, not a bug in this project's code.
+
+Re-tested since then (see test_isolation_minimal.py / test_isolation_
+realistic.py at the repo root) on Windows, Python 3.12.10, tensorflow-
+cpu 2.16.1, torch 2.11.0+cu128, transformers 4.44.2 - both import-only
+and full load+predict passed 3/3 runs with no crash in-process. So the
+original finding stands as something that DID happen on some earlier
+combination of versions/environment, but isn't currently reproducing
+with these pinned versions on this OS. Not proof it's gone for good on
+every platform though - see the deployment checklist in
+DEPLOYMENT_NOTES.md before trusting this same in-process setup on a
+different OS (e.g. the Linux container Hugging Face Spaces uses).
 """
+
 
 import json
 import os

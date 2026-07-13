@@ -13,8 +13,11 @@ from src.ui.ai_toggle import capture_ai_toggle
 from src.ui.field_problem_capture import capture_field_and_problem
 from src.ui.save_data_toggle import capture_save_data_toggle
 from src.ui.sidebar_dashboard import render_sidebar
+from src.ui.welcome_splash import show_welcome_splash
 
 st.set_page_config(page_title="AI Learning Assistant", page_icon="🎓", layout="wide")
+
+show_welcome_splash()
 
 init_session_history()
 
