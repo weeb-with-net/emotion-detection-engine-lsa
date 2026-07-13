@@ -20,6 +20,7 @@ def render_sidebar(bert_ready: bool) -> None:
 
         if st.button("Clear History"):
             st.session_state.emotion_history = []
+            st.session_state.last_result = None
             st.rerun()
 
         if st.session_state.emotion_history:
