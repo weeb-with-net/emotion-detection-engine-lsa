@@ -8,6 +8,8 @@ flow instead of a pile of separate widgets. Trust-adapted phrasing
 intentionally not here yet - see EPIC5_POLISH_BACKLOG.md for what's
 held back and why.
 """
+import os
+
 import streamlit as st
 
 from src.inference.cached_loaders import get_bert_predictor, get_bilstm_predictor
@@ -25,6 +27,32 @@ from src.ui.sidebar_dashboard import render_sidebar
 from src.ui.welcome_splash import show_welcome_splash
 
 st.set_page_config(page_title="AI Learning Assistant", page_icon="🎓", layout="wide")
+
+
+def _load_cloud_secrets_into_env() -> None:
+    """Local dev uses .env (gitignored, loaded by dotenv in llm_client.py
+    etc) - that file just doesn't exist on Streamlit Cloud, secrets go
+    through st.secrets there instead. Bridging the ones we actually use
+    into os.environ so every os.getenv(...) call elsewhere in the
+    codebase keeps working unchanged, regardless of which one supplied
+    it. Wrapped in try/except because st.secrets raises FileNotFoundError
+    if no secrets.toml exists anywhere - which is the normal case for
+    local dev, not an error.
+
+    Has to run AFTER st.set_page_config() - accessing st.secrets counts
+    as a Streamlit command, and set_page_config has to be the very first
+    one or Streamlit throws (found this the hard way in Claude's own
+    dry run, not guessed).
+    """
+    try:
+        for key in ("LLM_PROVIDER", "OPENROUTER_API_KEY", "GEMINI_API_KEY", "HF_MODEL_REPO_ID"):
+            if key in st.secrets:
+                os.environ[key] = st.secrets[key]
+    except FileNotFoundError:
+        pass
+
+
+_load_cloud_secrets_into_env()
 
 show_welcome_splash()
 

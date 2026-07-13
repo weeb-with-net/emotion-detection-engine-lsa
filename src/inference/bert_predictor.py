@@ -3,6 +3,7 @@ Loads the fine-tuned BERT model and runs inference. Exposes both the raw
 softmax output (predict_raw) and the class-weighted + keyword-adjusted
 final output (predict), per the T3 spec.
 """
+import os
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +15,15 @@ from src.preprocessing.label_mapping import TARGET_CLASSES
 
 MODEL_PATH = Path("models/bert_emotion_model_final")
 
+# same deal as bilstm_predictor.py - models/ is gitignored, so a fresh
+# deploy clone won't have this folder at all. from_pretrained() can take
+# a HF Hub repo id directly instead of a local path, so this needs way
+# less code than BiLSTM's per-file download. HF_MODEL_REPO_ID unset ->
+# same local-path behavior as before, same eventual error if it's
+# missing and there's nowhere else to get it from.
+HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID")
+HF_SUBFOLDER = "bert_emotion_model_final"
+
 # Order matches TARGET_CLASSES: Bored, Confident, Confused, Curious, Frustrated.
 CLASS_WEIGHTS = np.array([1.2, 1.8, 0.6, 1.0, 1.4])
 
@@ -23,9 +33,16 @@ CONFUSION_BOOST = 2.0
 
 class BERTPredictor:
     def __init__(self, model_path=MODEL_PATH):
+        if model_path.exists():
+            source, kwargs = model_path, {}
+        elif HF_MODEL_REPO_ID:
+            source, kwargs = HF_MODEL_REPO_ID, {"subfolder": HF_SUBFOLDER}
+        else:
+            source, kwargs = model_path, {}  # same not-found error as before
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(source, **kwargs)
+        self.model = AutoModelForSequenceClassification.from_pretrained(source, **kwargs)
         self.model.to(self.device)
         self.model.eval()
 
