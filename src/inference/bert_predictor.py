@@ -21,7 +21,6 @@ MODEL_PATH = Path("models/bert_emotion_model_final")
 # less code than BiLSTM's per-file download. HF_MODEL_REPO_ID unset ->
 # same local-path behavior as before, same eventual error if it's
 # missing and there's nowhere else to get it from.
-HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID")
 HF_SUBFOLDER = "bert_emotion_model_final"
 
 # Order matches TARGET_CLASSES: Bored, Confident, Confused, Curious, Frustrated.
@@ -33,10 +32,11 @@ CONFUSION_BOOST = 2.0
 
 class BERTPredictor:
     def __init__(self, model_path=MODEL_PATH):
+        hf_model_repo_id = os.getenv("HF_MODEL_REPO_ID")
         if model_path.exists():
             source, kwargs = model_path, {}
-        elif HF_MODEL_REPO_ID:
-            source, kwargs = HF_MODEL_REPO_ID, {"subfolder": HF_SUBFOLDER}
+        elif hf_model_repo_id:
+            source, kwargs = hf_model_repo_id, {"subfolder": HF_SUBFOLDER}    
         else:
             source, kwargs = model_path, {}  # same not-found error as before
 

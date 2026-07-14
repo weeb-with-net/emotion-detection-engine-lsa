@@ -22,16 +22,20 @@ from src.preprocessing.label_mapping import TARGET_CLASSES
 MODEL_PATH = Path("models/bilstm/model.keras")
 TOKENIZER_PATH = Path("models/bilstm/tokenizer.pickle")
 
-HF_MODEL_REPO_ID = os.getenv("HF_MODEL_REPO_ID")
 
 
 def _resolve_path(local_path: Path, hf_filename: str) -> Path:
-    if local_path.exists() or not HF_MODEL_REPO_ID:
+    hf_model_repo_id = os.getenv("HF_MODEL_REPO_ID")
+
+    if local_path.exists() or not hf_model_repo_id:
         return local_path
-
     from huggingface_hub import hf_hub_download
-
-    return Path(hf_hub_download(repo_id=HF_MODEL_REPO_ID, filename=hf_filename))
+    return Path(
+        hf_hub_download(
+            repo_id=hf_model_repo_id,
+            filename=hf_filename,
+        )
+    )
 
 
 class BiLSTMPredictor:
