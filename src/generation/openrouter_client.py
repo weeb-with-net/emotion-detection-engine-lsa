@@ -23,6 +23,13 @@ load_dotenv()
 _client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENROUTER_API_KEY"),
+    # tencent/hy3:free is a shared, rate-limited free model - it can
+    # stall instead of erroring under load. With no timeout, a stalled
+    # request just hangs forever (no exception ever gets raised, so
+    # response_generator.py's try/except never even fires). This makes
+    # it fail loud enough to actually be caught, instead of hanging the
+    # whole app.
+    timeout=20.0,
 )
 
 
