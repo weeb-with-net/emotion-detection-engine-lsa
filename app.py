@@ -54,6 +54,16 @@ def _load_cloud_secrets_into_env() -> None:
 
 _load_cloud_secrets_into_env()
 
+if os.getenv("HF_MODEL_REPO_ID"):
+    # HF_MODEL_REPO_ID only gets set via Streamlit Cloud secrets - local
+    # dev never has it, so this only fires on deployment. Streamlit
+    # Cloud has no GPU at all, but an unpinned torch install can still
+    # pull in a full CUDA build, and torch.cuda.is_available() spends
+    # real time (sometimes a lot) probing for hardware that isn't
+    # there. Telling it up front there are zero visible devices skips
+    # that probing completely instead of hoping it fails fast.
+    os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")
+
 show_welcome_splash()
 
 init_session_history()
