@@ -16,12 +16,24 @@ from src.preprocessing.label_mapping import TARGET_CLASSES
 MODEL_PATH = Path("models/bert_emotion_model_final")
 
 # same deal as bilstm_predictor.py - models/ is gitignored, so a fresh
-# deploy clone won't have this folder at all. from_pretrained() can take
-# a HF Hub repo id directly instead of a local path, so this needs way
-# less code than BiLSTM's per-file download. HF_MODEL_REPO_ID unset ->
-# same local-path behavior as before, same eventual error if it's
-# missing and there's nowhere else to get it from.
+# deploy clone won't have real weights here. BUT the directory itself
+# still exists after a fresh clone (.gitkeep keeps it alive so git
+# doesn't drop the empty folder), so model_path.exists() is always True
+# even with nothing real inside - checking for config.json specifically
+# instead of just the directory is what actually tells local vs missing
+# apart. from_pretrained() can take a HF Hub repo id directly instead of
+# a local path, so this needs way less code than BiLSTM's per-file
+# download. HF_MODEL_REPO_ID unset -> same local-path behavior as
+# before, same eventual error if it's missing and there's nowhere else
+# to get it from.
 HF_SUBFOLDER = "bert_emotion_model_final"
+
+
+def _has_real_weights(path: Path) -> bool:
+    # config.json is the one file every transformers-saved model
+    # directory always has, checking for it (not just the folder)
+    # is what actually tells "real weights" apart from "just .gitkeep"
+    return (path / "config.json").exists()
 
 # Order matches TARGET_CLASSES: Bored, Confident, Confused, Curious, Frustrated.
 CLASS_WEIGHTS = np.array([1.2, 1.8, 0.6, 1.0, 1.4])
@@ -33,10 +45,10 @@ CONFUSION_BOOST = 2.0
 class BERTPredictor:
     def __init__(self, model_path=MODEL_PATH):
         hf_model_repo_id = os.getenv("HF_MODEL_REPO_ID")
-        if model_path.exists():
+        if _has_real_weights(model_path):
             source, kwargs = model_path, {}
         elif hf_model_repo_id:
-            source, kwargs = hf_model_repo_id, {"subfolder": HF_SUBFOLDER}    
+            source, kwargs = hf_model_repo_id, {"subfolder": HF_SUBFOLDER}
         else:
             source, kwargs = model_path, {}  # same not-found error as before
 
